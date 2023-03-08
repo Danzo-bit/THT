@@ -94,3 +94,8 @@ exports.login = async(req, res) => {
 
    return res.status(201).json({message: 'you are successfully logged in'})
 }
+
+exports.logout = async (req, res) =>{
+    //todo:end session or resolve valid token
+    return res.status(201).json({message: 'you are successfully logged out.'})
+}
