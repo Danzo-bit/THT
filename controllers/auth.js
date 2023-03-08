@@ -35,18 +35,37 @@ exports.register = async (req, res) => {
 
 exports.users = async (req, res) => {
 
-    const page = parseInt(req.query.page) || 1; // Current page number (default: 1)
-    const limit = parseInt(req.query.limit) || 10; // Number of items per page (default: 10)
+    const searchTerm = req.query.q;  //gets filter query from req
+    const page = parseInt(req.query.page) || 1; // default to page 1 if not provided
+    const limit = parseInt(req.query.limit) || 10; // default to 10 items per page if not provided
+    const skip = (page - 1) * limit;  //skip params to specify num of documents to skip
   
     try{
-    const dbusers = await User.find() //returns all existing users
-                        .skip((page - 1) * limit) //skips users in query page
-                        .limit(limit) //limit of users returned
+    const count = await User.countDocuments({
+            $or: [
+              { email: { $regex: searchTerm, $options: 'i' } },
+            ],
+          });
+
+    const dbusers = await User.find(
+        {
+            $or: [
+              { email: { $regex: searchTerm, $options: 'i' } },
+            ],
+          }
+    ) //returns all existing users
+    .skip(skip) //skips users in query page
+    .limit(limit) //limit of users returned
+
+    const totalPages = Math.ceil(count / limit);
 
     const users = dbusers.map(user => _.omit(user.toObject(), dbSecretFields))
     return res.status(201).json({
         message: "success",
-        page:req.query.page || 1,
+        totalItems: count,
+        totalPages: totalPages,
+        currentPage: page,
+        itemsPerPage: limit,
         users: users
     })
     }catch(err){
