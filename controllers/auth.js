@@ -32,3 +32,24 @@ exports.register = async (req, res) => {
             })
         
 }
+
+exports.users = async (req, res) => {
+
+    const page = parseInt(req.query.page) || 1; // Current page number (default: 1)
+    const limit = parseInt(req.query.limit) || 10; // Number of items per page (default: 10)
+  
+    try{
+    const dbusers = await User.find() //returns all existing users
+                        .skip((page - 1) * limit) //skips users in query page
+                        .limit(limit) //limit of users returned
+
+    const users = dbusers.map(user => _.omit(user.toObject(), dbSecretFields))
+    return res.status(201).json({
+        message: "success",
+        page:req.query.page || 1,
+        users: users
+    })
+    }catch(err){
+    res.status(500).json({ message: err.message })
+    }
+}
