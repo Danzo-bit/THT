@@ -1,5 +1,7 @@
 const User = require('../models/user')
 const registerValidator = require('../validators/register')
+const loginValidator = require('../validators/login')
+
 const bcrypt = require('bcrypt')
 const _ = require('lodash')
 const {dbSecretFields} = require('../configs/properties')
@@ -71,4 +73,24 @@ exports.users = async (req, res) => {
     }catch(err){
     res.status(500).json({ message: err.message })
     }
+}
+
+exports.login = async(req, res) => {
+    // validate request body
+    const validationMessage = loginValidator(req.body)
+    if(validationMessage !== true){
+        return res.status(400).json({message:validation})
+    }
+    // check if email exist in db
+    const user = await User.findOne({email: req.body.email})
+    if(!user){
+        return res.status(404).json({message: 'email does not exist.'})
+    }
+    // compare password provided to password in db
+    const isPasswordCorrect = await bcrypt.compare(req.body.password, user.password)
+    if(!isPasswordCorrect){
+        return res.status(401).json({message: 'password is not correct.'})
+    }
+
+   return res.status(201).json({message: 'you are successfully logged in'})
 }
