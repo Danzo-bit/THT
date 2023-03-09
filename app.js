@@ -18,10 +18,12 @@ app.use(
   )
 
 const authRoutes = require('./router/auth')
+const walletRoutes = require('./router/wallet')
 
 //parse jsonbody
 app.use(express.json({limit: '1KB'}))
 //mount router
 app.use('/api/v1/auth', authRoutes)
+app.use('/api/v1/wallet', walletRoutes)
 
 module.exports = app
