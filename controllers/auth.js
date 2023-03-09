@@ -8,7 +8,7 @@ const {dbSecretFields} = require('../configs/properties')
 
 exports.register = async (req, res) => {
     
-    //validate request body
+    // validate request body
     const validationMessage = registerValidator(req.body)
     if(validationMessage !== true){
         return res.status(400).json({message: validationMessage})
@@ -25,11 +25,15 @@ exports.register = async (req, res) => {
     //create new user in db
     const user = await User.create({...req.body, password:hashedPassword})
 
+    //use app session
+    req.session.user = user._id
+
     //send successful response.
     return res
         .status(201)
         .json({
             message: "you are registered successfully",
+            // omit password and __v fields
              user: _.omit(user.toObject(),dbSecretFields)
             })
         
@@ -92,10 +96,16 @@ exports.login = async(req, res) => {
         return res.status(401).json({message: 'password is not correct.'})
     }
 
-   return res.status(201).json({message: 'you are successfully logged in'})
+    //use app session
+    req.session.user = user._id
+
+   return res.status(201).json({
+    message: 'you are successfully logged in',
+    user: _.omit(user.toObject(), dbSecretFields)
+})
 }
 
 exports.logout = async (req, res) =>{
-    //todo:end session or resolve valid token
+    req.session.destroy();
     return res.status(201).json({message: 'you are successfully logged out.'})
 }
